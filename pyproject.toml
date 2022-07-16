@@ -4,6 +4,6 @@ description = "Server running the real time voice cloning ai"
 version = "0.1.0"
 
 dependencies = [
-  "fastapi"
+  "fastapi",
   "uvicorn[standard]"
 ]
