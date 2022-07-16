@@ -1,0 +1,9 @@
+[project]
+name = "Voice cloning AI server"
+description = "Server running the real time voice cloning ai"
+version = "0.1.0"
+
+dependencies = [
+  "fastapi"
+  "uvicorn[standard]"
+]
