@@ -16,7 +16,7 @@ if not os.path.isdir(root_data_path):
 router = APIRouter(
     prefix='/story',
     tags=['Story'],
-    responses={404: {"description": "Not found"}},
+    responses={404: {'description': 'Not found'}},
 )
 
 def delete_story(storyid):
@@ -30,9 +30,9 @@ def delete_story(storyid):
     return deleted
 
 def StoryGlob(storyid):
-    return glob(os.path.join(root_data_path, "%s-*.txt" % storyid))
+    return glob(os.path.join(root_data_path, '%s-*.txt' % storyid))
 
-@router.get("-{storyid}", status_code=404)
+@router.get('-{storyid}', status_code=404)
 async def GetStory(storyid, response: Response):
     story_glob = StoryGlob(storyid)
     if len(story_glob) > 0:
@@ -45,15 +45,15 @@ async def GetStory(storyid, response: Response):
             content = await f.read()
         return {'id': storyid, 'title': title, 'content': content} 
 
-@router.put("-{storyid}", status_code=201)
+@router.put('-{storyid}', status_code=201)
 async def PutStory(storyid, story: Story):
     delete_story(storyid)
-    file = os.path.join(root_data_path, "%s-%s.txt" % (storyid, story.title))
+    file = os.path.join(root_data_path, '%s-%s.txt' % (storyid, story.title))
     async with aiofiles.open(file, mode='w') as f:
        await f.write(story.content) 
     return {'id': storyid}
 
-@router.delete("-{storyid}", status_code=409)
+@router.delete('-{storyid}', status_code=409)
 async def DeleteStory(storyid, response: Response):
     deleted = delete_story(storyid)
     if deleted:

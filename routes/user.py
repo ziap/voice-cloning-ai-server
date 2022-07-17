@@ -39,7 +39,7 @@ def encode_voice(userid):
 router = APIRouter(
     prefix='/user',
     tags=['User'],
-    responses={404: {"description": "Not found"}},
+    responses={404: {'description': 'Not found'}},
 )
 
 @router.get('-{userid}', status_code=404)
