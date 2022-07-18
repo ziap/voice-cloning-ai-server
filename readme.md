@@ -10,17 +10,17 @@ Create a virtual environment with python3.7
 Clone the repository
 
 ```bash
-git clone https://github.com/ziap/voice-cloning-ai-server ai-server --recursive --depth=1 # Init submodules, shallow clone
+git clone --recursive --depth=1 https://github.com/ziap/voice-cloning-ai-server ai-server
 cd ai-server
 ```
 
-Install dependencies
+Install [PyTorch](https://pytorch.org/get-started/locally/)
+
+Install other dependencies
 
 ```bash
-cd model
 pip install -r model/requirements.txt
-cd ..
-pip install fastapi uvicorn[standard] python-multipart aiofiles
+pip install fastapi "uvicorn[standard]" python-multipart aiofiles
 ```
 
 Run the server
