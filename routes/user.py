@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Response, File, UploadFile, BackgroundTasks
 from shutil import rmtree
+from pathlib import Path
  
 import numpy as np
 import os
 import aiofiles
-import librosa
 
 from loadmodel import preprocess_wav, embed_utterance
 
@@ -12,24 +12,23 @@ root_data_path = os.path.join(os.getcwd(), 'data/users')
 if not os.path.isdir(root_data_path):
     os.makedirs(root_data_path)
 
-encode_queue_path = os.path.join(os.getcwd(), 'data/encode-queue')
-if not os.path.isdir(encode_queue_path):
-    os.makedirs(encode_queue_path)
+queue_path = os.path.join(os.getcwd(), 'data/queue')
+if not os.path.isdir(queue_path):
+    os.makedirs(queue_path)
 
 def UserPath(userid):
     return os.path.join(root_data_path, userid)
 
 def encode_voice(userid):
     # Get files
-    in_file = os.path.join(encode_queue_path, '%s.wav' % userid)
+    in_file = os.path.join(queue_path, '%s.wav' % userid)
     user_path = UserPath(userid)
     out_file = os.path.join(user_path, 'voice')
     
     # Generate embedding vector
-    original_wav, sampling_rate = librosa.load(in_file)
+    voice = preprocess_wav(Path(in_file))
     os.remove(in_file)
-    preprocessed = preprocess_wav(original_wav, sampling_rate)
-    data = embed_utterance(preprocessed)
+    data = embed_utterance(voice)
 
     # Save output
     if not os.path.isdir(user_path):
@@ -50,7 +49,7 @@ async def GetUser(userid, response: Response):
 
 @router.put('-{userid}', status_code=201)
 async def PutUser(userid, tasks: BackgroundTasks, voice: UploadFile = File(...)):
-    voice_queue_file = os.path.join(encode_queue_path, '%s.wav' % userid) 
+    voice_queue_file = os.path.join(queue_path, '%s.wav' % userid) 
     async with aiofiles.open(voice_queue_file, 'wb') as out_file:
         content = await voice.read(1024)
         while content:
@@ -65,5 +64,5 @@ async def DeleteUser(userid, response: Response):
     if os.path.isdir(UserPath(user_path)):
         response.status_code=200
         rmtree(user_path)
-        return {'id': userid, 'deleted': True}
-    return {'id': userid, 'deleted': False}
+        return {'deleted': True}
+    return {'deleted': False}

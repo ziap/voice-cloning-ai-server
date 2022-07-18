@@ -27,6 +27,9 @@ def delete_story(storyid):
         for file in story_glob:
             if file[file.rindex('/') + 1:file.rindex('-')] == storyid:
                 os.remove(file)
+    for file in glob(os.path.join(os.getcwd(), 'data/users/*/%s.wav' % storyid)):
+        deleted = True
+        os.remove(file)
     return deleted
 
 def StoryGlob(storyid):

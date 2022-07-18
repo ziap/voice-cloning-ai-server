@@ -23,10 +23,10 @@ vocoder.load_model("saved_models/default/vocoder.pt")
 preprocess_wav = encoder.preprocess_wav
 embed_utterance = encoder.embed_utterance
 synthesize_spectrograms = synthesizer.synthesize_spectrograms
+sample_rate = synthesizer.sample_rate
 infer_waveform = vocoder.infer_waveform
 
-# Indent not to export test variables
-if True:
+if __name__ == '__main__':
     print("\tTesting the encoder...")
     embed_utterance(np.zeros(encoder.sampling_rate))
 
