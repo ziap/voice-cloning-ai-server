@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from routes import router
 
 import uvicorn
@@ -23,8 +24,6 @@ origins = [
     '%s:%d' % (HOST, PORT),
 ]
 
-print(origins)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -37,5 +36,6 @@ if __name__ == '__main__':
     if DEBUG:
         uvicorn.run('main:app', host=HOST, port=PORT, reload=True)
     else:
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=origins)
         uvicorn.run(app, host=HOST, port=PORT)
 
