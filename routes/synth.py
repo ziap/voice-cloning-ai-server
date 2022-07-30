@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Response, BackgroundTasks
 from fastapi.responses import FileResponse
-from loadmodel import sample_rate, preprocess_wav, synthesize_spectrograms, infer_waveform
+from loadmodel import hop_size, sample_rate, preprocess_wav, synthesize_spectrograms, infer_waveform
 
 from .user import UserPath
 from .story import StoryGlob
@@ -8,6 +8,8 @@ from .story import StoryGlob
 import os
 import numpy as np
 import soundfile as sf
+
+processing = set()
 
 router = APIRouter(
     prefix='',
@@ -19,19 +21,28 @@ def VoiceFile(userid, storyid):
     return os.path.join(UserPath(userid), '%s.wav' % storyid)
 
 def SynthesizeVoice(userid, storyid):
+    processing.add((userid, storyid))
     user_path = UserPath(userid)
     story_file = StoryGlob(storyid)[0]
     user_voice = os.path.join(user_path, 'voice.npy')
     voice = np.load(user_voice)
     with open(story_file) as f:
-        text = f.read()
-        spec = synthesize_spectrograms([text], [voice])[0]
+        texts = f.read().split('\n')
+        voices = [voice] * len(texts)
+        specs = synthesize_spectrograms(texts, voices)
+        breaks = [spec.shape[1] for spec in specs]
+        spec = np.concatenate(specs, axis=1)
         wav = infer_waveform(spec) 
-        wav = np.pad(wav, (0, sample_rate), mode='constant')
+        b_ends = np.cumsum(np.array(breaks) * hop_size)
+        b_starts = np.concatenate(([0], b_ends[:-1]))
+        wavs = [wav[start:end] for start, end in zip(b_starts, b_ends)]
+        breaks = [np.zeros(int(0.15 * sample_rate))] * len(breaks)
+        wav = np.concatenate([i for w, b in zip(wavs, breaks) for i in (w, b)])
         wav = preprocess_wav(wav)
         file = VoiceFile(userid, storyid)
         if len(StoryGlob(storyid)) > 0:
             sf.write(file, wav.astype(np.float32), sample_rate)
+    processing.remove((userid, storyid))
 
 
 @router.get('/user-{userid}/story-{storyid}', status_code=404)
@@ -50,8 +61,10 @@ async def GetVoice(userid, storyid, response: Response, task: BackgroundTasks):
         if file[file.rindex('/') + 1:file.rindex('-')] != storyid:
             return
         response.status_code = 202
+        if (userid, storyid) in processing:
+            return {'status': 'processing'}
         task.add_task(SynthesizeVoice, userid, storyid)
-        return {'status': 'processing'}
+        return {'status': 'started processing'}
          
 
 @router.delete('/user-{userid}/story-{storyid}', status_code=409)

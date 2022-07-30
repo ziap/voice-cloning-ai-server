@@ -24,6 +24,7 @@ preprocess_wav = encoder.preprocess_wav
 embed_utterance = encoder.embed_utterance
 synthesize_spectrograms = synthesizer.synthesize_spectrograms
 sample_rate = synthesizer.sample_rate
+hop_size = synthesizer.hparams.hop_size
 infer_waveform = vocoder.infer_waveform
 
 if __name__ == '__main__':

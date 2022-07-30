@@ -16,13 +16,12 @@ HOST = env.get('HOST', '127.0.0.1')
 PORT = int(env.get('PORT', 3000))
 DEBUG = bool(env.get('DEBUG', False))
 
+TRUSTED_PORT = int(env.get('TRUSTED_PORT', 8080))
+
 app = FastAPI()
 app.include_router(router)
 
-origins = [
-    HOST,
-    '%s:%d' % (HOST, PORT),
-]
+origins = [ HOST, '%s:%d' % (HOST, PORT) ]
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,6 +35,8 @@ if __name__ == '__main__':
     if DEBUG:
         uvicorn.run('main:app', host=HOST, port=PORT, reload=True)
     else:
-        app.add_middleware(TrustedHostMiddleware, allowed_hosts=origins)
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=[
+            '%s:%d' % (HOST, TRUSTED_PORT)
+        ])
         uvicorn.run(app, host=HOST, port=PORT)
 
