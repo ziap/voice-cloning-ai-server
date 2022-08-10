@@ -3,8 +3,9 @@ from fastapi.responses import FileResponse
 from loadmodel import hop_size, sample_rate, preprocess_wav, synthesize_spectrograms, infer_waveform
 
 from .user import UserPath
-from .story import StoryGlob
+from .story import StoryGlob, root_data_path
 
+import aiofiles
 import os
 import numpy as np
 import soundfile as sf
@@ -44,6 +45,19 @@ def SynthesizeVoice(userid, storyid):
             sf.write(file, wav.astype(np.float32), sample_rate)
     processing.remove((userid, storyid))
 
+@router.get('/user-{userid}', status_code=404)
+async def GetVoices(userid, response: Response):
+    user_path = UserPath(userid)
+    if os.path.isdir(user_path):
+        response.status_code = 200
+        stories = dict()
+        for file in os.listdir(root_data_path):
+            id = file[:file.rindex('-')]
+            title = file[file.rindex('-') + 1:file.rindex('.')] 
+            async with aiofiles.open(file, mode='r') as f:
+                content = await f.read()
+            voice_file = VoiceFile(userid, id)
+            stories[id] = {'title': title, 'content': content, 'recorded': os.path.isfile(voice_file)}
 
 @router.get('/user-{userid}/story-{storyid}', status_code=404)
 async def GetVoice(userid, storyid, response: Response, task: BackgroundTasks):
