@@ -45,7 +45,7 @@ def SynthesizeVoice(userid, storyid):
             sf.write(file, wav.astype(np.float32), sample_rate)
     processing.remove((userid, storyid))
 
-@router.get('/user-{userid}', status_code=404)
+@router.get('/user-{userid}/stories', status_code=404)
 async def GetVoices(userid, response: Response):
     user_path = UserPath(userid)
     if os.path.isdir(user_path):
