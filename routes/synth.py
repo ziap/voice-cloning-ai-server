@@ -54,10 +54,11 @@ async def GetVoices(userid, response: Response):
         for file in os.listdir(root_data_path):
             id = file[:file.rindex('-')]
             title = file[file.rindex('-') + 1:file.rindex('.')] 
-            async with aiofiles.open(file, mode='r') as f:
+            async with aiofiles.open(os.path.join(root_data_path, file), mode='r') as f:
                 content = await f.read()
             voice_file = VoiceFile(userid, id)
-            stories[id] = {'title': title, 'content': content, 'recorded': os.path.isfile(voice_file)}
+            stories[id] = {'title': title, 'content': content, 'synthesized': os.path.isfile(voice_file)}
+        return stories
 
 @router.get('/user-{userid}/story-{storyid}', status_code=404)
 async def GetVoice(userid, storyid, response: Response, task: BackgroundTasks):

@@ -31,8 +31,6 @@ def encode_voice(userid):
     data = embed_utterance(voice)
 
     # Save output
-    if not os.path.isdir(user_path):
-        os.makedirs(user_path)
     np.save(out_file, data)
 
 router = APIRouter(
@@ -50,6 +48,9 @@ async def GetUser(userid, response: Response):
 @router.put('-{userid}', status_code=201)
 async def PutUser(userid, tasks: BackgroundTasks, voice: UploadFile = File(...)):
     voice_queue_file = os.path.join(queue_path, '%s.wav' % userid) 
+    user_path = UserPath(userid)
+    if not os.path.isdir(user_path):
+        os.makedirs(user_path)
     async with aiofiles.open(voice_queue_file, 'wb') as out_file:
         content = await voice.read(1024)
         while content:
