@@ -57,7 +57,12 @@ async def GetVoices(userid, response: Response):
             async with aiofiles.open(os.path.join(root_data_path, file), mode='r') as f:
                 content = await f.read()
             voice_file = VoiceFile(userid, id)
-            stories[id] = {'title': title, 'content': content, 'synthesized': os.path.isfile(voice_file)}
+            status = 'not synthesized'
+            if os.path.isfile(voice_file):
+                status = 'synthesized'
+            elif (userid, id) in processing:
+                status = 'synthesizing'
+            stories[id] = {'title': title, 'content': content, 'status': status}
         return stories
 
 @router.get('/user-{userid}/story-{storyid}', status_code=404)
